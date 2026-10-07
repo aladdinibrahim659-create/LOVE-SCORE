@@ -1,0 +1,1334 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Love Score Calculator</title>
+
+  <meta name="description" content="Enter two names and discover your love score and FLAMES result. Free, fun and available in six languages. Created by ALADDIN.">
+  <meta property="og:title" content="Love Score Calculator">
+  <meta property="og:description" content="Enter two names and discover your love score and FLAMES result. Created by ALADDIN.">
+  <meta property="og:type" content="website">
+  <meta name="theme-color" content="#2a0a24">
+  <meta name="author" content="ALADDIN">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%92%96%3C/text%3E%3C/svg%3E">
+
+  <!-- Optional font. If you are offline, the page falls back to a system font. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --wine: #2a0a24;
+      --plum: #4b1347;
+      --coral: #ff4d7d;
+      --blush: #ffe8ef;
+      --gold: #ffc857;
+    }
+
+    * { box-sizing: border-box; }
+
+    [hidden] { display: none !important; }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+    }
+
+    body {
+      position: relative;
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      overflow-x: hidden;
+      font-family: "Fredoka", system-ui, -apple-system, "Segoe UI", sans-serif;
+      color: var(--blush);
+      background:
+        radial-gradient(circle at 15% 8%, rgba(255, 77, 125, 0.34), transparent 45%),
+        radial-gradient(circle at 88% 92%, rgba(255, 200, 87, 0.18), transparent 42%),
+        linear-gradient(160deg, var(--plum), var(--wine) 60%);
+      background-attachment: fixed;
+    }
+
+    /* ---------- Soft hearts floating in the background ---------- */
+    .ambient { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+
+    .ambient span {
+      position: absolute;
+      bottom: -60px;
+      color: var(--coral);
+      opacity: 0;
+      animation: float-up linear infinite;
+    }
+
+    @keyframes float-up {
+      0%   { transform: translateY(0) rotate(0deg); opacity: 0; }
+      10%  { opacity: 0.22; }
+      90%  { opacity: 0.12; }
+      100% { transform: translateY(-115vh) rotate(30deg); opacity: 0; }
+    }
+
+    /* ---------- Card ---------- */
+    .card {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 560px;
+      padding: 28px 28px 24px;
+      text-align: center;
+      border-radius: 36px;
+      background: rgba(255, 232, 239, 0.08);
+      border: 1px solid rgba(255, 232, 239, 0.2);
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(10px);
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .logo {
+      display: grid;
+      place-items: center;
+      width: 40px;
+      height: 40px;
+      font-size: 1.25rem;
+      color: #fff;
+      background: var(--coral);
+      border-radius: 14px;
+      box-shadow: 0 6px 18px rgba(255, 77, 125, 0.5);
+    }
+
+    #lang {
+      padding: 8px 12px;
+      font: inherit;
+      font-size: 0.95rem;
+      color: var(--blush);
+      background: rgba(255, 232, 239, 0.1);
+      border: 1px solid rgba(255, 232, 239, 0.3);
+      border-radius: 12px;
+      cursor: pointer;
+    }
+
+    #lang option { color: var(--wine); background: var(--blush); }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: clamp(1.8rem, 6vw, 2.3rem);
+      font-weight: 700;
+      line-height: 1.15;
+    }
+
+    .subtitle {
+      margin: 0 0 18px;
+      font-size: 1.05rem;
+      color: rgba(255, 232, 239, 0.8);
+    }
+
+    /* ---------- The heart ---------- */
+    .heart-wrap {
+      position: relative;
+      width: 250px;
+      height: 225px;
+      margin: 0 auto 18px;
+    }
+
+    .heart-wrap svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+      filter: drop-shadow(0 0 22px rgba(255, 77, 125, 0.45));
+    }
+
+    .heart-wrap.idle svg     { animation: beat 1.6s ease-in-out infinite; }
+    .heart-wrap.thinking svg { animation: beat 0.7s ease-in-out infinite; }
+
+    @keyframes beat {
+      0%, 100% { transform: scale(1); }
+      15%      { transform: scale(1.06); }
+      30%      { transform: scale(1); }
+      45%      { transform: scale(1.04); }
+    }
+
+    .wave { animation: drift 2.2s linear infinite; }
+
+    @keyframes drift {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-100px); }
+    }
+
+    .score {
+      position: absolute;
+      inset: 0 0 auto 0;
+      top: 34%;
+      direction: ltr;
+      font-size: 3.4rem;
+      font-weight: 700;
+      color: #fff;
+      text-shadow: 0 2px 12px rgba(42, 10, 36, 0.55);
+      pointer-events: none;
+    }
+
+    /* ---------- Form ---------- */
+    .names {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 12px;
+      align-items: end;
+    }
+
+    .field { text-align: start; }
+
+    .amp {
+      padding-bottom: 12px;
+      font-size: 1.8rem;
+      color: var(--coral);
+      animation: beat 1.6s ease-in-out infinite;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 14px 16px;
+      font: inherit;
+      font-size: 1.1rem;
+      color: var(--wine);
+      background: var(--blush);
+      border: 2px solid transparent;
+      border-radius: 16px;
+    }
+
+    input[type="text"]::placeholder { color: rgba(74, 20, 69, 0.5); }
+    input[type="text"][aria-invalid="true"] { border-color: var(--gold); }
+    input[type="text"]:disabled { opacity: 0.65; }
+
+    .error {
+      min-height: 1.4em;
+      margin: 10px 0 6px;
+      text-align: start;
+      font-size: 0.95rem;
+      color: var(--gold);
+    }
+
+    button {
+      width: 100%;
+      padding: 14px 18px;
+      font: inherit;
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #fff;
+      background: linear-gradient(135deg, #ff6a93, #ff2e63);
+      border: 0;
+      border-radius: 16px;
+      cursor: pointer;
+      box-shadow: 0 8px 22px rgba(255, 46, 99, 0.35);
+      transition: transform 0.15s ease, filter 0.15s ease;
+    }
+
+    button:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-2px); }
+    button:active:not(:disabled) { transform: translateY(0); }
+    button:disabled { opacity: 0.6; cursor: wait; }
+
+    .secondary {
+      background: transparent;
+      box-shadow: none;
+      border: 2px solid rgba(255, 232, 239, 0.4);
+    }
+
+    .secondary:hover:not(:disabled) { background: rgba(255, 232, 239, 0.12); filter: none; }
+
+    input:focus-visible,
+    select:focus-visible,
+    button:focus-visible {
+      outline: 3px solid var(--gold);
+      outline-offset: 3px;
+    }
+
+    /* ---------- Analyzing status ---------- */
+    .status {
+      min-height: 1.5em;
+      margin: 14px 0 0;
+      font-weight: 500;
+      color: var(--gold);
+    }
+
+    /* ---------- Result ---------- */
+    .result { margin-top: 16px; }
+
+    .result-title {
+      margin: 0 0 2px;
+      font-size: 1.35rem;
+      font-weight: 700;
+      overflow-wrap: anywhere;
+    }
+
+    .result-tag {
+      margin: 0 0 12px;
+      font-weight: 600;
+      color: var(--gold);
+    }
+
+    .flames {
+      display: inline-block;
+      margin: 0 0 6px;
+      padding: 8px 18px;
+      font-weight: 600;
+      background: rgba(255, 200, 87, 0.14);
+      border: 1px solid rgba(255, 200, 87, 0.45);
+      border-radius: 999px;
+    }
+
+    .flames-note {
+      margin: 0 0 14px;
+      font-size: 0.88rem;
+      color: rgba(255, 232, 239, 0.65);
+    }
+
+    .result-reading {
+      margin: 0;
+      color: rgba(255, 232, 239, 0.9);
+      line-height: 1.55;
+    }
+
+    .breakdown {
+      display: grid;
+      gap: 10px;
+      margin-top: 20px;
+      text-align: start;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 120px 1fr 46px;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .track {
+      height: 10px;
+      overflow: hidden;
+      border-radius: 99px;
+      background: rgba(255, 232, 239, 0.15);
+    }
+
+    .fill {
+      height: 100%;
+      width: 0;
+      border-radius: 99px;
+      background: linear-gradient(90deg, #ff8fab, #ff2e63);
+      transition: width 1s ease-out;
+    }
+
+    .value { direction: ltr; text-align: end; font-weight: 600; }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .copy-status {
+      min-height: 1.3em;
+      margin: 8px 0 0;
+      font-size: 0.9rem;
+      color: var(--gold);
+    }
+
+    .note {
+      margin: 18px 0 0;
+      font-size: 0.85rem;
+      color: rgba(255, 232, 239, 0.6);
+    }
+
+    .credit {
+      margin: 10px 0 0;
+      padding-top: 14px;
+      font-size: 0.95rem;
+      border-top: 1px solid rgba(255, 232, 239, 0.16);
+      color: rgba(255, 232, 239, 0.8);
+    }
+
+    .owner {
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: var(--gold);
+    }
+
+    /* ---------- Floating hearts for high scores ---------- */
+    .confetti {
+      position: fixed;
+      bottom: -40px;
+      z-index: 10;
+      pointer-events: none;
+      animation: rise linear forwards;
+    }
+
+    @keyframes rise {
+      to { transform: translateY(-110vh) rotate(25deg); opacity: 0; }
+    }
+
+    @media (max-width: 540px) {
+      .card { padding: 22px 18px 20px; border-radius: 28px; }
+      .names { grid-template-columns: 1fr; gap: 10px; }
+      .amp { display: none; }
+      .row { grid-template-columns: 100px 1fr 44px; }
+      .actions { grid-template-columns: 1fr; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .heart-wrap.idle svg, .heart-wrap.thinking svg, .wave, .amp { animation: none; }
+      .confetti, .ambient { display: none; }
+      button, .fill { transition: none; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="ambient" id="ambient" aria-hidden="true"></div>
+
+  <main class="card">
+    <div class="topbar">
+      <span class="logo" aria-hidden="true">♥</span>
+      <label class="sr-only" for="lang">Language</label>
+      <select id="lang"></select>
+    </div>
+
+    <h1 data-i18n="title">Love Score Calculator</h1>
+    <p class="subtitle" data-i18n="subtitle">Enter two different names and see what the heart says.</p>
+
+    <div class="heart-wrap idle" id="heartWrap">
+      <svg viewBox="0 0 100 90" role="img" aria-label="Heart">
+        <defs>
+          <clipPath id="heartClip">
+            <path d="M50 85 C20 62 5 45 5 28 C5 14 16 5 29 5 C38 5 46 10 50 17 C54 10 62 5 71 5 C84 5 95 14 95 28 C95 45 80 62 50 85 Z"/>
+          </clipPath>
+          <linearGradient id="liquid" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#ff8fab"/>
+            <stop offset="1" stop-color="#ff2e63"/>
+          </linearGradient>
+        </defs>
+
+        <!-- empty heart -->
+        <path d="M50 85 C20 62 5 45 5 28 C5 14 16 5 29 5 C38 5 46 10 50 17 C54 10 62 5 71 5 C84 5 95 14 95 28 C95 45 80 62 50 85 Z"
+              fill="rgba(255,255,255,0.08)"/>
+
+        <!-- liquid that rises with the score -->
+        <g clip-path="url(#heartClip)">
+          <g id="liquidLevel" transform="translate(0 90)">
+            <g class="wave">
+              <path d="M-100 0 Q-75 -5 -50 0 T0 0 T50 0 T100 0 T150 0 T200 0 V100 H-100 Z" fill="url(#liquid)"/>
+            </g>
+          </g>
+        </g>
+
+        <!-- outline and shine -->
+        <path d="M50 85 C20 62 5 45 5 28 C5 14 16 5 29 5 C38 5 46 10 50 17 C54 10 62 5 71 5 C84 5 95 14 95 28 C95 45 80 62 50 85 Z"
+              fill="none" stroke="#ffe8ef" stroke-width="2" stroke-linejoin="round"/>
+        <path d="M20 22 C16 27 15 33 17 38" fill="none" stroke="#ffffff" stroke-opacity="0.55" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+      <div class="score" id="score" aria-hidden="true">?</div>
+    </div>
+
+    <form id="loveForm" novalidate>
+      <div class="names">
+        <div class="field">
+          <label for="yourName" data-i18n="yourName">Your name</label>
+          <input type="text" id="yourName" maxlength="30" autocomplete="off" data-i18n-ph="phYour" placeholder="For example: Daniel">
+        </div>
+
+        <div class="amp" aria-hidden="true">♥</div>
+
+        <div class="field">
+          <label for="loverName" data-i18n="loverName">Your lover's name</label>
+          <input type="text" id="loverName" maxlength="30" autocomplete="off" data-i18n-ph="phLover" placeholder="For example: Amina">
+        </div>
+      </div>
+
+      <p class="error" id="error" role="alert"></p>
+      <button type="submit" id="calcBtn" data-i18n="calc">Calculate love score</button>
+    </form>
+
+    <p class="status" id="status" aria-live="polite"></p>
+
+    <section class="result" id="result" aria-live="polite" hidden>
+      <p class="result-title" id="resultTitle"></p>
+      <p class="result-tag" id="resultTag"></p>
+
+      <p class="flames" id="flames"></p>
+      <p class="flames-note" id="flamesNote"></p>
+
+      <p class="result-reading" id="resultReading"></p>
+
+      <div class="breakdown" id="breakdown"></div>
+
+      <div class="actions">
+        <button type="button" class="secondary" id="copyBtn" data-i18n="copy">Copy result</button>
+        <button type="button" class="secondary" id="waBtn" data-i18n="whatsapp">Send on WhatsApp</button>
+        <button type="button" class="secondary" id="saveBtn" data-i18n="save">Save picture</button>
+        <button type="button" class="secondary" id="anotherBtn" data-i18n="again">Try new names</button>
+      </div>
+      <p class="copy-status" id="copyStatus" aria-live="polite"></p>
+    </section>
+
+    <p class="note" data-i18n="note">Just for fun. This is not a real prediction.</p>
+
+    <p class="credit">
+      <span data-i18n="credit">Created with love by</span>
+      <span class="owner">ALADDIN</span> <span aria-hidden="true">♥</span>
+    </p>
+  </main>
+
+  <script>
+    /*PURE-START*/
+    const I18N = {
+      en: {
+        title: "Love Score Calculator",
+        subtitle: "Enter two different names and see what the heart says.",
+        yourName: "Your name",
+        loverName: "Your lover's name",
+        phYour: "For example: Daniel",
+        phLover: "For example: Amina",
+        calc: "Calculate love score",
+        again: "Try new names",
+        analyzing: ["Comparing the names...", "Reading the stars...", "Measuring the chemistry..."],
+        errFirst: "Please enter your name first.",
+        errSecond: "Please enter your lover's name.",
+        errLetters: "Names must contain letters.",
+        errSame: "Please enter two different people. A name cannot be matched with itself.",
+        tiers: ["Soulmate level", "Very strong match", "Good spark", "A slow burn"],
+        intro: [
+          "{a} and {b} make a rare pair.",
+          "{a} and {b} bring out the best in each other.",
+          "{a} and {b} have a real spark.",
+          "{a} and {b} are a slow burn, and those can last."
+        ],
+        cats: { trust: "Trust", romance: "Romance", fun: "Fun together", longterm: "Long-term" },
+        tips: {
+          trust: "Your strongest link is trust, so be open with each other this week.",
+          romance: "Your strongest link is romance, so plan something special together.",
+          fun: "Your strongest link is fun, so keep making time to laugh together.",
+          longterm: "Your strongest link is the long term, so talk about what you both want ahead."
+        },
+        flames: ["Friends", "Love", "Affection", "Marriage", "Enemies", "Siblings"],
+        flamesTitle: "FLAMES result",
+        flamesLeft: "Letters left after matching: {n}",
+        copy: "Copy result",
+        copied: "Copied. Paste it to a friend!",
+        copyFail: "Could not copy. Please select the result and copy it.",
+        whatsapp: "Send on WhatsApp",
+        save: "Save picture",
+        saved: "Picture saved to your device.",
+        saveFail: "Could not create the picture.",
+        note: "Just for fun. This is not a real prediction.",
+        credit: "Created with love by",
+        shareText: "{a} + {b} = {s}% love score. FLAMES says: {f}. What is yours?"
+      },
+
+      sw: {
+        title: "Kikokotoo cha Alama za Mapenzi",
+        subtitle: "Weka majina mawili tofauti uone moyo unasema nini.",
+        yourName: "Jina lako",
+        loverName: "Jina la mpenzi wako",
+        phYour: "Mfano: Daniel",
+        phLover: "Mfano: Amina",
+        calc: "Kokotoa alama za mapenzi",
+        again: "Jaribu majina mapya",
+        analyzing: ["Tunalinganisha majina...", "Tunasoma nyota...", "Tunapima mvuto wenu..."],
+        errFirst: "Tafadhali weka jina lako kwanza.",
+        errSecond: "Tafadhali weka jina la mpenzi wako.",
+        errLetters: "Majina lazima yawe na herufi.",
+        errSame: "Tafadhali weka watu wawili tofauti. Jina haliwezi kulinganishwa na lenyewe.",
+        tiers: ["Mwenzi wa roho", "Mchanganyiko imara sana", "Cheche nzuri", "Moto wa polepole"],
+        intro: [
+          "{a} na {b} ni jozi adimu.",
+          "{a} na {b} mnatoa upande bora wa kila mmoja.",
+          "{a} na {b} mna cheche ya kweli.",
+          "{a} na {b} ni moto wa polepole, na hiyo inaweza kudumu."
+        ],
+        cats: { trust: "Uaminifu", romance: "Mahaba", fun: "Furaha pamoja", longterm: "Muda mrefu" },
+        tips: {
+          trust: "Kiungo chenu kikubwa ni uaminifu, kwa hiyo fungukeni kwa kila mmoja wiki hii.",
+          romance: "Kiungo chenu kikubwa ni mahaba, kwa hiyo pangeni jambo maalum pamoja.",
+          fun: "Kiungo chenu kikubwa ni furaha, kwa hiyo endeleeni kutafuta muda wa kucheka pamoja.",
+          longterm: "Kiungo chenu kikubwa ni muda mrefu, kwa hiyo zungumzeni mnachotaka mbeleni."
+        },
+        flames: ["Marafiki", "Mapenzi", "Upendo", "Ndoa", "Maadui", "Ndugu"],
+        flamesTitle: "Matokeo ya FLAMES",
+        flamesLeft: "Herufi zilizobaki baada ya kulinganisha: {n}",
+        copy: "Nakili matokeo",
+        copied: "Imenakiliwa. Mtumie rafiki!",
+        copyFail: "Imeshindikana kunakili. Chagua matokeo kisha unakili.",
+        whatsapp: "Tuma kwa WhatsApp",
+        save: "Hifadhi picha",
+        saved: "Picha imehifadhiwa kwenye kifaa chako.",
+        saveFail: "Imeshindikana kutengeneza picha.",
+        note: "Ni kwa furaha tu. Si utabiri wa kweli.",
+        credit: "Imetengenezwa kwa upendo na",
+        shareText: "{a} + {b} = alama {s}% za mapenzi. FLAMES inasema: {f}. Yako ni ngapi?"
+      },
+
+      fr: {
+        title: "Calculateur d'amour",
+        subtitle: "Entrez deux prénoms différents et découvrez ce que dit le cœur.",
+        yourName: "Votre prénom",
+        loverName: "Le prénom de votre amoureux(se)",
+        phYour: "Par exemple : Daniel",
+        phLover: "Par exemple : Amina",
+        calc: "Calculer le score d'amour",
+        again: "Essayer d'autres prénoms",
+        analyzing: ["Comparaison des prénoms...", "Lecture des étoiles...", "Mesure de la complicité..."],
+        errFirst: "Veuillez d'abord entrer votre prénom.",
+        errSecond: "Veuillez entrer le prénom de votre amoureux(se).",
+        errLetters: "Les prénoms doivent contenir des lettres.",
+        errSame: "Veuillez entrer deux personnes différentes. Un prénom ne peut pas être associé à lui-même.",
+        tiers: ["Âmes sœurs", "Très belle compatibilité", "Une belle étincelle", "Un feu qui couve"],
+        intro: [
+          "{a} et {b} forment un duo rare.",
+          "{a} et {b} se révèlent mutuellement.",
+          "{a} et {b} ont une vraie étincelle.",
+          "{a} et {b} sont un feu qui couve, et ceux-là durent."
+        ],
+        cats: { trust: "Confiance", romance: "Romance", fun: "Plaisir à deux", longterm: "Long terme" },
+        tips: {
+          trust: "Votre plus grand atout est la confiance, alors parlez-vous ouvertement cette semaine.",
+          romance: "Votre plus grand atout est la romance, alors prévoyez ensemble quelque chose de spécial.",
+          fun: "Votre plus grand atout est le plaisir, alors continuez à prendre le temps de rire ensemble.",
+          longterm: "Votre plus grand atout est le long terme, alors parlez de ce que vous voulez pour l'avenir."
+        },
+        flames: ["Amis", "Amour", "Affection", "Mariage", "Ennemis", "Frère et sœur"],
+        flamesTitle: "Résultat FLAMES",
+        flamesLeft: "Lettres restantes après comparaison : {n}",
+        copy: "Copier le résultat",
+        copied: "Copié. Envoyez-le à un ami !",
+        copyFail: "Copie impossible. Sélectionnez le résultat et copiez-le.",
+        whatsapp: "Envoyer sur WhatsApp",
+        save: "Enregistrer l'image",
+        saved: "Image enregistrée sur votre appareil.",
+        saveFail: "Impossible de créer l'image.",
+        note: "Juste pour s'amuser. Ce n'est pas une vraie prédiction.",
+        credit: "Créé avec amour par",
+        shareText: "{a} + {b} = {s} % de score d'amour. FLAMES dit : {f}. Et le vôtre ?"
+      },
+
+      es: {
+        title: "Calculadora de amor",
+        subtitle: "Escribe dos nombres distintos y descubre qué dice el corazón.",
+        yourName: "Tu nombre",
+        loverName: "El nombre de tu pareja",
+        phYour: "Por ejemplo: Daniel",
+        phLover: "Por ejemplo: Amina",
+        calc: "Calcular puntuación de amor",
+        again: "Probar otros nombres",
+        analyzing: ["Comparando los nombres...", "Leyendo las estrellas...", "Midiendo la química..."],
+        errFirst: "Primero escribe tu nombre.",
+        errSecond: "Escribe el nombre de tu pareja.",
+        errLetters: "Los nombres deben tener letras.",
+        errSame: "Escribe dos personas distintas. Un nombre no se puede comparar consigo mismo.",
+        tiers: ["Almas gemelas", "Pareja muy compatible", "Buena chispa", "Fuego lento"],
+        intro: [
+          "{a} y {b} forman una pareja única.",
+          "{a} y {b} sacan lo mejor el uno del otro.",
+          "{a} y {b} tienen una chispa real.",
+          "{a} y {b} son fuego lento, y ese dura."
+        ],
+        cats: { trust: "Confianza", romance: "Romance", fun: "Diversión juntos", longterm: "Largo plazo" },
+        tips: {
+          trust: "Su mayor punto fuerte es la confianza, así que hablen con sinceridad esta semana.",
+          romance: "Su mayor punto fuerte es el romance, así que planeen algo especial juntos.",
+          fun: "Su mayor punto fuerte es la diversión, así que sigan sacando tiempo para reír juntos.",
+          longterm: "Su mayor punto fuerte es el largo plazo, así que hablen de lo que quieren para el futuro."
+        },
+        flames: ["Amigos", "Amor", "Cariño", "Matrimonio", "Enemigos", "Hermanos"],
+        flamesTitle: "Resultado FLAMES",
+        flamesLeft: "Letras que quedan tras comparar: {n}",
+        copy: "Copiar resultado",
+        copied: "Copiado. ¡Pégalo y envíaselo a un amigo!",
+        copyFail: "No se pudo copiar. Selecciona el resultado y cópialo.",
+        whatsapp: "Enviar por WhatsApp",
+        save: "Guardar imagen",
+        saved: "Imagen guardada en tu dispositivo.",
+        saveFail: "No se pudo crear la imagen.",
+        note: "Solo por diversión. No es una predicción real.",
+        credit: "Creado con amor por",
+        shareText: "{a} + {b} = {s}% de puntuación de amor. FLAMES dice: {f}. ¿Y la tuya?"
+      },
+
+      pt: {
+        title: "Calculadora de amor",
+        subtitle: "Digite dois nomes diferentes e veja o que o coração diz.",
+        yourName: "Seu nome",
+        loverName: "O nome do seu amor",
+        phYour: "Por exemplo: Daniel",
+        phLover: "Por exemplo: Amina",
+        calc: "Calcular pontuação de amor",
+        again: "Tentar outros nomes",
+        analyzing: ["Comparando os nomes...", "Lendo as estrelas...", "Medindo a química..."],
+        errFirst: "Digite primeiro o seu nome.",
+        errSecond: "Digite o nome do seu amor.",
+        errLetters: "Os nomes devem conter letras.",
+        errSame: "Digite duas pessoas diferentes. Um nome não pode ser comparado com ele mesmo.",
+        tiers: ["Almas gêmeas", "Combinação muito forte", "Boa faísca", "Fogo lento"],
+        intro: [
+          "{a} e {b} formam um par raro.",
+          "{a} e {b} tiram o melhor um do outro.",
+          "{a} e {b} têm uma faísca de verdade.",
+          "{a} e {b} são fogo lento, e esse dura."
+        ],
+        cats: { trust: "Confiança", romance: "Romance", fun: "Diversão juntos", longterm: "Longo prazo" },
+        tips: {
+          trust: "O ponto mais forte de vocês é a confiança, então conversem com abertura esta semana.",
+          romance: "O ponto mais forte de vocês é o romance, então planejem algo especial juntos.",
+          fun: "O ponto mais forte de vocês é a diversão, então continuem arrumando tempo para rir juntos.",
+          longterm: "O ponto mais forte de vocês é o longo prazo, então conversem sobre o que querem para o futuro."
+        },
+        flames: ["Amigos", "Amor", "Carinho", "Casamento", "Inimigos", "Irmãos"],
+        flamesTitle: "Resultado FLAMES",
+        flamesLeft: "Letras restantes após comparar: {n}",
+        copy: "Copiar resultado",
+        copied: "Copiado. Cole e envie a um amigo!",
+        copyFail: "Não foi possível copiar. Selecione o resultado e copie.",
+        whatsapp: "Enviar no WhatsApp",
+        save: "Salvar imagem",
+        saved: "Imagem salva no seu dispositivo.",
+        saveFail: "Não foi possível criar a imagem.",
+        note: "Só por diversão. Não é uma previsão real.",
+        credit: "Criado com amor por",
+        shareText: "{a} + {b} = {s}% de pontuação de amor. FLAMES diz: {f}. E a sua?"
+      },
+
+      ar: {
+        title: "حاسبة الحب",
+        subtitle: "اكتب اسمين مختلفين وشاهد ماذا يقول القلب.",
+        yourName: "اسمك",
+        loverName: "اسم حبيبك",
+        phYour: "مثال: دانيال",
+        phLover: "مثال: أمينة",
+        calc: "احسب درجة الحب",
+        again: "جرّب أسماء جديدة",
+        analyzing: ["نقارن بين الاسمين...", "نقرأ النجوم...", "نقيس الانسجام..."],
+        errFirst: "من فضلك اكتب اسمك أولاً.",
+        errSecond: "من فضلك اكتب اسم حبيبك.",
+        errLetters: "يجب أن تحتوي الأسماء على حروف.",
+        errSame: "من فضلك اكتب شخصين مختلفين. لا يمكن مقارنة اسم بنفسه.",
+        tiers: ["توأم الروح", "توافق قوي جداً", "شرارة جميلة", "حب هادئ ينمو"],
+        intro: [
+          "{a} و{b} ثنائي نادر.",
+          "{a} و{b} يُخرج كل منكما أفضل ما في الآخر.",
+          "{a} و{b} بينكما شرارة حقيقية.",
+          "{a} و{b} حب هادئ ينمو ببطء، وهذا النوع يدوم."
+        ],
+        cats: { trust: "الثقة", romance: "الرومانسية", fun: "المرح معاً", longterm: "المستقبل" },
+        tips: {
+          trust: "أقوى رابط بينكما هو الثقة، فتحدثا بصراحة هذا الأسبوع.",
+          romance: "أقوى رابط بينكما هو الرومانسية، فخططا لشيء مميز معاً.",
+          fun: "أقوى رابط بينكما هو المرح، فاستمرا في تخصيص وقت للضحك معاً.",
+          longterm: "أقوى رابط بينكما هو المستقبل، فتحدثا عمّا تريدانه لاحقاً."
+        },
+        flames: ["أصدقاء", "حب", "مودة", "زواج", "أعداء", "إخوة"],
+        flamesTitle: "نتيجة FLAMES",
+        flamesLeft: "الحروف المتبقية بعد المطابقة: {n}",
+        copy: "انسخ النتيجة",
+        copied: "تم النسخ. الصقها وأرسلها لصديق!",
+        copyFail: "تعذّر النسخ. حدّد النتيجة وانسخها.",
+        whatsapp: "أرسل عبر واتساب",
+        save: "احفظ الصورة",
+        saved: "تم حفظ الصورة على جهازك.",
+        saveFail: "تعذّر إنشاء الصورة.",
+        note: "للتسلية فقط. هذه ليست توقعات حقيقية.",
+        credit: "صُنع بحب بواسطة",
+        shareText: "{a} + {b} = {s}% درجة حب. FLAMES يقول: {f}. وما درجتك؟"
+      }
+    };
+
+    const LANGS = [
+      ["en", "English"],
+      ["sw", "Kiswahili"],
+      ["fr", "Français"],
+      ["es", "Español"],
+      ["pt", "Português"],
+      ["ar", "العربية"]
+    ];
+
+    const CATEGORY_KEYS = ["trust", "romance", "fun", "longterm"];
+    const TIER_EMOJI = ["💞", "💖", "✨", "🔥"];
+    const FLAMES_EMOJI = ["🤝", "💖", "🥰", "💍", "⚡", "👫"];
+
+    // Replaces {a}, {b}, {n} ... inside a sentence.
+    function fill(text, vars) {
+      return text.replace(/\{(\w+)\}/g, function (match, key) {
+        return key in vars ? vars[key] : match;
+      });
+    }
+
+    // Turns text into a number. The same text always gives the same number.
+    function fnv(text) {
+      let h = 0x811c9dc5;
+      for (let i = 0; i < text.length; i++) {
+        h ^= text.charCodeAt(i);
+        h = Math.imul(h, 0x01000193) >>> 0;
+      }
+      return h >>> 0;
+    }
+
+    // "  Amina  ", "amina" and "Âmina" count as the same name.
+    function normalize(text) {
+      return text
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f\u064b-\u065f]/g, "")
+        .toLowerCase()
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function tidy(text) {
+      return text.trim().replace(/\s+/g, " ");
+    }
+
+    // Used to check that the two names are not the same person.
+    function sameName(a, b) {
+      return normalize(a).replace(/\s/g, "") === normalize(b).replace(/\s/g, "");
+    }
+
+    function hasLetter(text) {
+      return /\p{L}/u.test(text);
+    }
+
+    function tierIndex(score) {
+      if (score >= 90) return 0;
+      if (score >= 75) return 1;
+      if (score >= 50) return 2;
+      return 3;
+    }
+
+    function calculate(nameA, nameB) {
+      // Sorting means "Daniel + Amina" and "Amina + Daniel" give the same score.
+      const pair = [normalize(nameA), normalize(nameB)].sort().join("|");
+
+      const score = 30 + (fnv(pair) % 71);                       // 30 to 100
+
+      const parts = CATEGORY_KEYS.map(function (key) {
+        const offset = (fnv(pair + "#" + key) % 21) - 10;        // -10 to +10
+        const value = Math.max(15, Math.min(100, score + offset));
+        return { key: key, value: value };
+      });
+
+      let best = parts[0];
+      parts.forEach(function (p) { if (p.value > best.value) best = p; });
+
+      return { score: score, parts: parts, best: best };
+    }
+
+    // The classic FLAMES game: Friends, Love, Affection, Marriage, Enemies, Siblings.
+    // Letters the two names share cancel each other out, then the letters
+    // that are left decide which word is crossed out each round.
+    function flamesFor(nameA, nameB) {
+      const lettersA = Array.from(normalize(nameA)).filter(function (ch) { return /\p{L}/u.test(ch); });
+      const lettersB = Array.from(normalize(nameB)).filter(function (ch) { return /\p{L}/u.test(ch); });
+
+      const available = {};
+      lettersB.forEach(function (ch) { available[ch] = (available[ch] || 0) + 1; });
+
+      let common = 0;
+      lettersA.forEach(function (ch) {
+        if (available[ch] > 0) { available[ch] -= 1; common += 1; }
+      });
+
+      const left = lettersA.length + lettersB.length - 2 * common;
+
+      // Names made of exactly the same letters leave nothing: a perfect match.
+      if (left === 0) return { index: 1, left: 0 };
+
+      const list = [0, 1, 2, 3, 4, 5];
+      let position = 0;
+      while (list.length > 1) {
+        position = (position + left - 1) % list.length;
+        list.splice(position, 1);
+      }
+      return { index: list[0], left: left };
+    }
+    /*PURE-END*/
+
+    /* ============================================================
+       Page code
+       ============================================================ */
+    const $ = function (id) { return document.getElementById(id); };
+
+    const form        = $("loveForm");
+    const yourInput   = $("yourName");
+    const loverInput  = $("loverName");
+    const errorBox    = $("error");
+    const calcBtn     = $("calcBtn");
+    const heartWrap   = $("heartWrap");
+    const scoreText   = $("score");
+    const liquid      = $("liquidLevel");
+    const statusBox   = $("status");
+    const resultBox   = $("result");
+    const resultTitle = $("resultTitle");
+    const resultTag   = $("resultTag");
+    const flamesEl    = $("flames");
+    const flamesNote  = $("flamesNote");
+    const resultRead  = $("resultReading");
+    const breakdownEl = $("breakdown");
+    const copyBtn     = $("copyBtn");
+    const waBtn       = $("waBtn");
+    const saveBtn     = $("saveBtn");
+    const anotherBtn  = $("anotherBtn");
+    const copyStatus  = $("copyStatus");
+    const langSelect  = $("lang");
+
+    const HEART_PATH = "M50 85 C20 62 5 45 5 28 C5 14 16 5 29 5 C38 5 46 10 50 17 C54 10 62 5 71 5 C84 5 95 14 95 28 C95 45 80 62 50 85 Z";
+    const FONT = '"Fredoka", system-ui, -apple-system, "Segoe UI", sans-serif';
+
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const sleep = function (ms) {
+      return new Promise(function (resolve) { setTimeout(resolve, reduceMotion ? 0 : ms); });
+    };
+
+    let lang = "en";
+    let busy = false;
+    let lastData = null;       // only the result on screen right now; nothing is saved or listed
+
+    function T() { return I18N[lang]; }
+
+    /* ---------- Language ---------- */
+    function detectLanguage() {
+      try {
+        const saved = localStorage.getItem("love-lang");
+        if (saved && I18N[saved]) return saved;
+      } catch (e) {}
+
+      const wanted = (navigator.languages && navigator.languages.length) ? navigator.languages : [navigator.language || "en"];
+      for (let i = 0; i < wanted.length; i++) {
+        const code = String(wanted[i]).slice(0, 2).toLowerCase();
+        if (I18N[code]) return code;
+      }
+      return "en";
+    }
+
+    function applyLanguage() {
+      const text = T();
+      document.documentElement.lang = lang;
+      document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
+      document.title = text.title;
+
+      document.querySelectorAll("[data-i18n]").forEach(function (el) {
+        const value = text[el.getAttribute("data-i18n")];
+        if (typeof value === "string") el.textContent = value;
+      });
+
+      document.querySelectorAll("[data-i18n-ph]").forEach(function (el) {
+        const value = text[el.getAttribute("data-i18n-ph")];
+        if (typeof value === "string") el.placeholder = value;
+      });
+
+      langSelect.value = lang;
+      errorBox.textContent = "";
+      copyStatus.textContent = "";
+      yourInput.removeAttribute("aria-invalid");
+      loverInput.removeAttribute("aria-invalid");
+
+      if (lastData && !resultBox.hidden) renderResult(false);
+    }
+
+    LANGS.forEach(function (item) {
+      const option = document.createElement("option");
+      option.value = item[0];
+      option.textContent = item[1];
+      langSelect.appendChild(option);
+    });
+
+    langSelect.addEventListener("change", function () {
+      lang = langSelect.value;
+      try { localStorage.setItem("love-lang", lang); } catch (e) {}
+      applyLanguage();
+    });
+
+    /* ---------- Background hearts ---------- */
+    function buildAmbientHearts() {
+      if (reduceMotion) return;
+      const box = $("ambient");
+      for (let i = 0; i < 14; i++) {
+        const heart = document.createElement("span");
+        heart.textContent = "♥";
+        heart.style.left = Math.random() * 100 + "%";
+        heart.style.fontSize = 14 + Math.random() * 30 + "px";
+        heart.style.animationDuration = 16 + Math.random() * 16 + "s";
+        heart.style.animationDelay = "-" + Math.random() * 24 + "s";
+        box.appendChild(heart);
+      }
+    }
+
+    /* ---------- Heart animation ---------- */
+
+    // The heart's inside runs from y = 85 (bottom tip) to y = 5 (top).
+    function setLevel(percent) {
+      const y = 85 - (percent / 100) * 80;
+      liquid.setAttribute("transform", "translate(0 " + y + ")");
+    }
+
+    function animateTo(score) {
+      return new Promise(function (resolve) {
+        if (reduceMotion) {
+          setLevel(score);
+          scoreText.textContent = score + "%";
+          resolve();
+          return;
+        }
+
+        const duration = 2200;
+        const start = performance.now();
+
+        function frame(now) {
+          const t = Math.min((now - start) / duration, 1);
+          const eased = 1 - Math.pow(1 - t, 3);          // slows down near the end
+          setLevel(eased * score);
+          scoreText.textContent = Math.round(eased * score) + "%";
+
+          if (t < 1) requestAnimationFrame(frame);
+          else resolve();
+        }
+        requestAnimationFrame(frame);
+      });
+    }
+
+    function launchHearts() {
+      if (reduceMotion) return;
+      const symbols = ["♥", "❤", "💖"];
+      for (let i = 0; i < 26; i++) {
+        const heart = document.createElement("span");
+        heart.className = "confetti";
+        heart.textContent = symbols[i % symbols.length];
+        heart.style.left = Math.random() * 100 + "vw";
+        heart.style.fontSize = 18 + Math.random() * 26 + "px";
+        heart.style.color = i % 3 === 0 ? "#ffc857" : "#ff4d7d";
+        heart.style.animationDuration = 2.4 + Math.random() * 2 + "s";
+        heart.style.animationDelay = Math.random() * 0.8 + "s";
+        document.body.appendChild(heart);
+        setTimeout(function () { heart.remove(); }, 5500);
+      }
+    }
+
+    /* ---------- Showing the result ---------- */
+    function renderBreakdown(parts, animate) {
+      breakdownEl.textContent = "";
+      const fills = [];
+
+      parts.forEach(function (p) {
+        const row = document.createElement("div");
+        row.className = "row";
+
+        const label = document.createElement("span");
+        label.textContent = T().cats[p.key];
+
+        const track = document.createElement("div");
+        track.className = "track";
+        const fillBar = document.createElement("div");
+        fillBar.className = "fill";
+        if (!animate) fillBar.style.width = p.value + "%";
+        track.appendChild(fillBar);
+
+        const value = document.createElement("span");
+        value.className = "value";
+        value.textContent = p.value + "%";
+
+        row.append(label, track, value);
+        breakdownEl.appendChild(row);
+        fills.push({ el: fillBar, value: p.value });
+      });
+
+      if (animate) {
+        void breakdownEl.offsetWidth;                      // lets the bars start from 0
+        fills.forEach(function (f) { f.el.style.width = f.value + "%"; });
+      }
+    }
+
+    function renderResult(animate) {
+      const text = T();
+      const d = lastData;
+      const tier = tierIndex(d.result.score);
+
+      resultTitle.textContent = d.a + " + " + d.b + " = " + d.result.score + "%";
+      resultTag.textContent = TIER_EMOJI[tier] + " " + text.tiers[tier];
+
+      flamesEl.textContent = FLAMES_EMOJI[d.flames.index] + " " + text.flamesTitle + ": " + text.flames[d.flames.index];
+      flamesNote.textContent = fill(text.flamesLeft, { n: d.flames.left });
+
+      resultRead.textContent =
+        fill(text.intro[tier], { a: d.a, b: d.b }) + " " + text.tips[d.result.best.key];
+
+      renderBreakdown(d.result.parts, animate);
+      resultBox.hidden = false;
+    }
+
+    function shareMessage() {
+      const text = T();
+      const d = lastData;
+      let message = fill(text.shareText, {
+        a: d.a,
+        b: d.b,
+        s: d.result.score,
+        f: text.flames[d.flames.index]
+      });
+      if (/^https?:/.test(window.location.href)) message += " " + window.location.href;
+      return message;
+    }
+
+    function setBusy(isBusy) {
+      busy = isBusy;
+      calcBtn.disabled = isBusy;
+      yourInput.disabled = isBusy;
+      loverInput.disabled = isBusy;
+    }
+
+    function showError(message, inputs, focusInput) {
+      errorBox.textContent = message;
+      inputs.forEach(function (input) { input.setAttribute("aria-invalid", "true"); });
+      focusInput.focus();
+    }
+
+    /* ---------- Picture to save and share ---------- */
+    function fitText(ctx, text, maxWidth, startSize, weight) {
+      let size = startSize;
+      ctx.font = weight + " " + size + "px " + FONT;
+      while (ctx.measureText(text).width > maxWidth && size > 24) {
+        size -= 2;
+        ctx.font = weight + " " + size + "px " + FONT;
+      }
+    }
+
+    async function savePicture() {
+      const text = T();
+      const d = lastData;
+      if (!d) return;
+
+      try {
+        if (document.fonts && document.fonts.ready) await document.fonts.ready;
+
+        const W = 1080, H = 1350;
+        const canvas = document.createElement("canvas");
+        canvas.width = W;
+        canvas.height = H;
+        const ctx = canvas.getContext("2d");
+        const score = d.result.score;
+        const tier = tierIndex(score);
+
+        ctx.direction = lang === "ar" ? "rtl" : "ltr";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+
+        // Background
+        const bg = ctx.createLinearGradient(0, 0, W, H);
+        bg.addColorStop(0, "#4b1347");
+        bg.addColorStop(1, "#2a0a24");
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, W, H);
+
+        const glow = ctx.createRadialGradient(200, 150, 10, 200, 150, 700);
+        glow.addColorStop(0, "rgba(255,77,125,0.40)");
+        glow.addColorStop(1, "rgba(255,77,125,0)");
+        ctx.fillStyle = glow;
+        ctx.fillRect(0, 0, W, H);
+
+        // Title
+        ctx.fillStyle = "#ffe8ef";
+        fitText(ctx, text.title, 900, 56, 700);
+        ctx.fillText(text.title, W / 2, 110);
+
+        // Heart that is filled up to the score
+        const heart = new Path2D(HEART_PATH);
+        ctx.save();
+        ctx.translate(140, 190);
+        ctx.scale(8, 8);
+        ctx.fillStyle = "rgba(255,255,255,0.10)";
+        ctx.fill(heart);
+
+        ctx.save();
+        ctx.clip(heart);
+        const level = 85 - (score / 100) * 80;
+        const liquidFill = ctx.createLinearGradient(0, level, 0, 85);
+        liquidFill.addColorStop(0, "#ff8fab");
+        liquidFill.addColorStop(1, "#ff2e63");
+        ctx.fillStyle = liquidFill;
+        ctx.fillRect(0, level, 100, 100);
+        ctx.restore();
+
+        ctx.lineWidth = 2;
+        ctx.lineJoin = "round";
+        ctx.strokeStyle = "#ffe8ef";
+        ctx.stroke(heart);
+        ctx.restore();
+
+        // Score inside the heart
+        ctx.direction = "ltr";
+        ctx.fillStyle = "#ffffff";
+        ctx.shadowColor = "rgba(42,10,36,0.6)";
+        ctx.shadowBlur = 24;
+        ctx.font = "700 170px " + FONT;
+        ctx.fillText(score + "%", W / 2, 470);
+        ctx.shadowBlur = 0;
+        ctx.direction = lang === "ar" ? "rtl" : "ltr";
+
+        // Names
+        const names = d.a + " + " + d.b;
+        ctx.fillStyle = "#ffe8ef";
+        fitText(ctx, names, 920, 74, 700);
+        ctx.fillText(names, W / 2, 1010);
+
+        // Tier
+        ctx.fillStyle = "#ffc857";
+        fitText(ctx, TIER_EMOJI[tier] + " " + text.tiers[tier], 900, 52, 600);
+        ctx.fillText(TIER_EMOJI[tier] + " " + text.tiers[tier], W / 2, 1100);
+
+        // FLAMES
+        ctx.fillStyle = "#ffe8ef";
+        const flamesLine = FLAMES_EMOJI[d.flames.index] + " " + text.flamesTitle + ": " + text.flames[d.flames.index];
+        fitText(ctx, flamesLine, 900, 44, 500);
+        ctx.fillText(flamesLine, W / 2, 1180);
+
+        // Owner credit
+        ctx.fillStyle = "#ffc857";
+        const credit = text.credit + " ALADDIN";
+        fitText(ctx, credit, 900, 38, 600);
+        ctx.fillText(credit, W / 2, 1275);
+
+        canvas.toBlob(function (blob) {
+          if (!blob) { copyStatus.textContent = text.saveFail; return; }
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = "love-score.png";
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+          copyStatus.textContent = text.saved;
+          setTimeout(function () { copyStatus.textContent = ""; }, 3000);
+        }, "image/png");
+      } catch (err) {
+        copyStatus.textContent = text.saveFail;
+      }
+    }
+
+    /* ---------- Events ---------- */
+    form.addEventListener("submit", async function (event) {
+      event.preventDefault();
+      if (busy) return;
+
+      const text = T();
+      const nameA = tidy(yourInput.value);
+      const nameB = tidy(loverInput.value);
+
+      yourInput.removeAttribute("aria-invalid");
+      loverInput.removeAttribute("aria-invalid");
+
+      if (nameA === "") { showError(text.errFirst, [yourInput], yourInput); return; }
+      if (nameB === "") { showError(text.errSecond, [loverInput], loverInput); return; }
+      if (!hasLetter(nameA)) { showError(text.errLetters, [yourInput], yourInput); return; }
+      if (!hasLetter(nameB)) { showError(text.errLetters, [loverInput], loverInput); return; }
+
+      // The two names must be two different people
+      if (sameName(nameA, nameB)) {
+        showError(text.errSame, [yourInput, loverInput], loverInput);
+        return;
+      }
+
+      errorBox.textContent = "";
+      copyStatus.textContent = "";
+      setBusy(true);
+      resultBox.hidden = true;
+      heartWrap.classList.remove("idle");
+      heartWrap.classList.add("thinking");
+      setLevel(0);
+      scoreText.textContent = "...";
+
+      const result = calculate(nameA, nameB);
+      const flames = flamesFor(nameA, nameB);
+
+      for (let i = 0; i < 3; i++) {
+        statusBox.textContent = T().analyzing[i];
+        await sleep(900);
+      }
+      statusBox.textContent = "";
+
+      heartWrap.classList.remove("thinking");
+      await animateTo(result.score);
+
+      lastData = { a: nameA, b: nameB, result: result, flames: flames };
+      renderResult(true);
+      if (result.score >= 75) launchHearts();
+      setBusy(false);
+    });
+
+    [yourInput, loverInput].forEach(function (input) {
+      input.addEventListener("input", function () {
+        yourInput.removeAttribute("aria-invalid");
+        loverInput.removeAttribute("aria-invalid");
+        errorBox.textContent = "";
+      });
+    });
+
+    anotherBtn.addEventListener("click", function () {
+      yourInput.value = "";
+      loverInput.value = "";
+      lastData = null;
+      resultBox.hidden = true;
+      statusBox.textContent = "";
+      copyStatus.textContent = "";
+      setLevel(0);
+      scoreText.textContent = "?";
+      heartWrap.classList.add("idle");
+      yourInput.focus();
+    });
+
+    copyBtn.addEventListener("click", async function () {
+      if (!lastData) return;
+      const message = shareMessage();
+
+      let copied = false;
+      try {
+        await navigator.clipboard.writeText(message);
+        copied = true;
+      } catch (err) {
+        // Fallback for browsers that block the clipboard on local files.
+        const temp = document.createElement("textarea");
+        temp.value = message;
+        document.body.appendChild(temp);
+        temp.select();
+        try { copied = document.execCommand("copy"); } catch (e) { copied = false; }
+        temp.remove();
+      }
+
+      copyStatus.textContent = copied ? T().copied : T().copyFail;
+      setTimeout(function () { copyStatus.textContent = ""; }, 3000);
+    });
+
+    waBtn.addEventListener("click", function () {
+      if (!lastData) return;
+      window.open("https://wa.me/?text=" + encodeURIComponent(shareMessage()), "_blank", "noopener");
+    });
+
+    saveBtn.addEventListener("click", savePicture);
+
+    /* ---------- Start ---------- */
+    lang = detectLanguage();
+    applyLanguage();
+    buildAmbientHearts();
+  </script>
+</body>
+</html>
